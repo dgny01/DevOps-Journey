@@ -168,3 +168,58 @@ Bu yontem sunucularda buyuk esneklik saglar.
 * **Linux:** Soyutlamayi sever. 10 tane disk de taksan, kullanici sadece klasorler gorur.
 * **Not:** Windows da aslinda diski klasore baglayabilir (NTFS Mount Point) ama varsayilan olarak bunu gizler ve surucu harfi kullanir.
 
+
+###  9. Dosya Icerigi Goruntuleme (Okuma)
+
+* `cat [dosya]`: **(Hizli Bakis)** Kisa dosyalarin tum icerigini ekrana basar.
+    * *Ornek:* `cat notlar.txt` -> Icinde ne varsa gosterir.
+    *  **UYARI:** Cok buyuk dosyalarda (loglar gibi) kullanma, ekrani kilitler!
+
+* `less [dosya]`: **(Akilli Okuyucu)** Buyuk dosyalari sayfa sayfa acar. RAM'i siserrmez.
+    * *Kullanim:* `less buyuk_log.txt`
+    * *Cikis:* Klavyeden **"q"** tusuna basarak cikilir.
+    * *Gezinti:* Bosluk (Space) tusuyla asagi, "b" tusuyla yukari cikilir.
+
+* `head -n [sayi] [dosya]`: **(Bas Kisim)** Dosyanin sadece bastan belirtilen kadar satirini gosterir.
+    * *Ornek:* `head -n 10 log.txt` -> Sadece ilk 10 satira bakar.
+
+* `tail -n [sayi] [dosya]`: **(Kuyruk Kisim)** Dosyanin sadece sondan belirtilen kadar satirini gosterir.
+    * *Ornek:* `tail -n 20 error.log` -> Hatayi bulmak icin son 20 satira bakar.
+
+* `tail -f [dosya]`: **(Canli Takip - Follow)** Dosyaya yeni yazilan satirlari canli olarak ekrana akitir.
+    * *Kullanim:* Sunucu loglarini izlemek icin efsanedir. Cikmak icin **CTRL + C** yapilir.
+
+###  8. Dosya Duzenleme (Editorler)
+
+* `nano [dosya]`: **(Terminalin Not Defteri)** Dosyayi acar ve icinde degisiklik yapmani saglar.
+    * **Nasil Kullanilir?**
+        1. `nano ayarlar.txt` yazip gir.
+        2. Yon tuslariyla gez, yazi yaz veya sil.
+        3. **Kaydetmek ve Cikmak icin:** Once `CTRL + X`, sonra `Y` (Yes), sonra `Enter`.
+
+###  9. Arama Islemleri (Google Gibi)
+
+* `grep "aranan" [dosya]`: **(Cimbizla Cekme)** Dosyanin icini acmadan, icinde gecen kelimeyi bulur ve o satiri getirir.
+    * *Ornek:* `grep "ERROR" sunucu.log` -> Milyonlarca satir icinden sadece hata olanlari bulur getirir.
+
+
+
+###  10. VIM Editor (Profesyonel Editor)
+
+* `vim [dosya]`: Dosyayi Vim editoruyle acar.
+    * **DIKKAT:** Vim acilinca hemen yazi yazamazsin! Once "i" tusuna basman gerekir.
+
+#### Vim Hizli Kullanim Klavuzu:
+1. **Yazi Yazmak Icin:**
+   * `i` tusuna bas (Insert Mode). Artik yazi yazabilirsin.
+
+2. **Komut Moduna Donmek Icin:**
+   * `ESC` tusuna bas. (Yazi yazmayi bitirince mutlaka bas).
+
+3. **Kaydetmek ve Cikmak Icin:**
+   * Once `ESC`'ye bas.
+   * Sonra `:wq` yaz ve `Enter`'a bas. (Write & Quit).
+
+4. **Kaydetmeden Cikmak Icin (Panik Cikisi):**
+   * Once `ESC`'ye bas.
+   * Sonra `:q!` yaz ve `Enter`'a bas. (Degisiklikleri cope atar ve cikar).
