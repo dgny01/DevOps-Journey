@@ -223,3 +223,103 @@ Bu yontem sunucularda buyuk esneklik saglar.
 4. **Kaydetmeden Cikmak Icin (Panik Cikisi):**
    * Once `ESC`'ye bas.
    * Sonra `:q!` yaz ve `Enter`'a bas. (Degisiklikleri cope atar ve cikar).
+
+
+###  11. Dosya Tipleri (File Types)
+
+* `ls -l`: Terminalde dosya listesi aldigimizda en soldaki harfe bakariz.
+    * **DIKKAT:** Windows'taki sari klasor ikonlari yoktur, dosyanin kimligini bu ilk harften anlariz.
+
+#### En Cok Karsilasacagin 3 Tip:
+1. **Sari Klasor (Directory):**
+   * `d` harfi ile baslar. Artik icine `cd` komutuyla girebilirsin.
+
+2. **Normal Dosya (Regular File):**
+   * `-` (tire) isareti ile baslar.
+   * **DIKKAT:** Icine `cd` ile GIREMEZSIN! Metin veya koddur.
+
+3. **Kisayol (Link):**
+   * `l` harfi ile baslar. Asil dosya baska yerdedir, bu sadece ona giden bir koprudur.
+
+
+
+###  12. Izinler ve Sahiplik (Permissions)
+
+* `403 Forbidden`: AWS'de site yayina alirken "Erisim Reddedildi" hatasi alirsan %99 sebebi budur.
+    * **DIKKAT:** Linux paranoyaktir, dosyayi kimin okuyacagini/yazacagini bilmek ister.
+
+#### A) Izinlerin Mantigi (rwx):
+1. **Okuma (Read):**
+   * `r` harfi ile gosterilir. Dosyayi okuyabilir mi? (Puani = 4)
+
+2. **Yazma (Write):**
+   * `w` harfi ile gosterilir. Dosyayi degistirebilir/silebilir mi? (Puani = 2)
+
+3. **Calistirma (Execute):**
+   * `x` harfi ile gosterilir. Bu bir programsa calistirabilir mi? (Puani = 1)
+
+#### B) Hayat Kurtaran "chmod" Komutlari:
+1. **Hayat Opucugu (Calistirma Izni):**
+   * `chmod +x [script.sh]` yazarak kendi koduna calisma yetkisi verirsin.
+
+2. **Saatli Bomba (Tam Yetki):**
+   * `chmod 777 [dosya]` yazarak herkese tam yetki verirsin. (Canli sunucuda ASLA yapilmaz!)
+
+3. **Standart Web Dosyasi:**
+   * `chmod 644 [dosya]` yazarak siteye girenlerin sadece okumasini saglarsin.
+
+4. **AWS Sunucu Guvenligi:**
+   * `chmod 400 [anahtar.pem]` yazarak gizli sunucu anahtarini kilitlersin. Yoksa AWS seni iceri almaz.
+
+#### C) Tapu Devri (chown Komutu):
+1. **Sahibi Degistirmek Icin:**
+   * `sudo chown [yeni_sahip]:[yeni_grup] [dosya_adi]` komutu kullanilir.
+   * **DIKKAT:** Root'un olusturdugu dosyayi duzenleyebilmek icin once tapusunu alman gerekir.
+
+
+   ###  13. Filtreleme Islemleri (Filtreler - Veri Ayiklama)
+
+* `Filter`: Bir veri yigininin (dosya veya komut ciktisi) icinden sadece ihtiyacimiz olan kismi suzmeye yarar. Genelde `|` (Pipe) isareti ile baska komutlarla beraber kullanilir.
+
+#### En Cok Kullanilan Filtre Komutlari:
+
+1. **grep (Aranan Kelimeyi Bul):**
+   * En onemli filtredir. Dosya icinde kelime arar.
+   * *Kullanim:* `grep "ERROR" server.log` -> Log dosyasi icindeki tum hatalari listeler.
+
+2. **sort (Sirala):**
+   * Metinleri alfabetik veya sayisal olarak siralar.
+   * *Kullanim:* `sort isimler.txt` -> Isimleri A'dan Z'ye dizer.
+
+3. **uniq (Tekrar Edenleri Sil):**
+   * Dosyadaki pes pese gelen ayni satirlari teke dusurur. Genelde `sort` ile beraber kullanilir.
+
+4. **wc (Kelime Sayaci - Word Count):**
+   * Dosyada kac satir veya kac kelime oldugunu soyler.
+   * *Kullanim:* `wc -l [dosya]` -> Dosyanin toplam kac satir oldugunu yazar.
+
+5. **awk ve sed (Ileri Seviye):**
+   * Dosya icindeki belirli sutunlari cekmek veya kelimeleri topluca degistirmek icin kullanilir.
+
+
+   * Ornek Senaryo: "Sunucuda kac tane Python dosyasi var?"
+    ls -l | grep ".py" | wc -l
+
+    ls -l: Her seyi listeler.
+
+    | grep ".py": Sadece sonu .py olanlari secer.
+
+    | wc -l: Secilenleri sayar
+
+    SORU:
+    John,Doe,120 jefferson st.,Riverside, NJ, 08075
+    Jack,McGinnis,220 hobo Av.,Phila, PA,09119
+    "John ""Da Man""",Repici,120 Jefferson St.,Riverside, NJ,08075
+    Stephen,Tyler,"7452 Terrace ""At the Plaza"" road",SomeTown,SD, 91234
+    ,Blankman,,SomeTown, SD, 00298
+    "Joan ""the bone"", Anne",Jet,"9th, at Terrace plc",Desert City,C00123
+    cevap:
+    awk -F',' '{print $3}' dosya.csv
+    yada
+    cut -d, -f3 dosya.csv
+
