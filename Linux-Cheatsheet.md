@@ -323,3 +323,95 @@ Bu yontem sunucularda buyuk esneklik saglar.
     yada
     cut -d, -f3 dosya.csv
 
+
+    #  Linux Redirections & Pipes (Yonlendirme ve Borular)
+*Hazirlayan: Gelecegin Cloud/DevOps Muhendisi*
+
+## 1. Veri Kanallari (Streams) Nelerdir?
+Linux'ta 3 ana kanal vardir:
+- **0 (stdin):** Klavyeden girilen veri.
+- **1 (stdout):** Basarili ve normal ciktilar (Ekrana basilir).
+- **2 (stderr):** Hata mesajlari (Ekrana basilir).
+
+## 2. Temel Yonlendirme Operatorleri
+- `>` **(Overwrite - Ustune Yaz):** Ciktiyi dosyaya yazar, dosyada eski bir sey varsa ACIMAZ SILER.
+  - *Ornek:* `echo "merhaba" > dosya.txt`
+- `>>` **(Append - Sonuna Ekle):** Ciktiyi dosyanin EN ALT SATIRINA ekler. Log tutarken hep bu kullanilir!
+  - *Ornek:* `echo "dunya" >> dosya.txt`
+- `2>` **(Error Redirect - Hata Yonlendirme):** Sadece hatalari dosyaya yazar, basarili olanlari ekrana basar.
+  - *Ornek:* `ls olmayan_klasor 2> hatalar.log`
+- `/dev/null` **(Kara Delik):** Ciktiyi veya hatayi sonsuzluga (cope) yollar. Ekranda gormek istemedigin seyleri buraya atarsin.
+  - *Ornek:* `ls root_klasoru 2> /dev/null`
+
+## 3. Ileri Seviye (DevOps) Yonlendirmeler
+- `> dosya.log 2>&1` **(Hepsini Birlestir):** Hem normal ciktilari hem de hatalari ayni dosyaya yazar.
+- `|` **(Pipe - Boru):** Birinci komutun ciktisini, ikinci komutun girdisi yapar. Komutlari zincirler.
+  - *Ornek:* `ls -l | grep "txt"` (Listele, ardindan icinden sadece txt olanlari filtrele)
+
+< (Input Redirect - Iceri Al): Bir dosyadaki veriyi okuyup, komutun icine klavye girdisi gibi sokar. (Ornek: sort < liste.txt)
+
+
+
+### 16. Kullanicilar ve Gruplar (Users & Groups)
+
+Linux cok kullanicili (multi-user) bir sistemdir. Guvenlik ve yetki yonetimi bu temel uzerine kuruludur.
+
+#### A) Kullanici Tipleri:
+1. **Root (Super User):** Sistemin tek patronudur. UID puani `0`'dir. Her seyi silebilir veya degistirebilir.
+2. **Normal Kullanicilar:** Bizim gibi sisteme giren kisiler. Genelde UID puanlari `1000`'den baslar.
+3. **Sistem Kullanicilari:** Insan degildir. Arka planda calisan servislerdir (nginx, mysql gibi).
+
+#### B) Kritik Dosyalar (Kullanici Bilgileri Nerede?):
+1. `/etc/passwd` -> Kullanici adlari, ev dizinleri ve UID bilgilerini tutar.
+2. `/etc/group` -> Gruplari ve icindeki kullanicilari listeler.
+3. `/etc/shadow` -> Sifrelerin gizli (hashlenmis) hallerini saklar.
+
+#### C) Temel Kullanici Komutlari:
+1. **Yeni Kullanici Ekleme:**
+   * `sudo useradd -m [kullanici_adi]` -> Kullaniciyi olusturur ve ev dizinini hazirlar.
+2. **Sifre Belirleme:**
+   * `sudo passwd [kullanici_adi]` -> Olusturulan kullaniciya giris sifresi verir.
+3. **Kullanici Silme:**
+   * `sudo userdel -r [kullanici_adi]` -> Kullaniciyi ve dosyalarini tamamen ucurur.
+
+#### D) Grup Yonetimi (Departman Kurma):
+1. **Yeni Grup Olusturma:**
+   * `sudo groupadd [grup_adi]` -> Ornegin: `yazilimcilar` adinda bir grup acar.
+2. **Kullaniciyi Gruba Ekleme (Terfi):**
+   * `sudo usermod -aG [grup_adi] [kullanici_adi]`
+   * **NOT:** `-aG` (Append Group) kullanilir. Boylece kullanici eski gruplarindan cikmadan yeni gruba girer.
+
+#### E) Kimlik Kontrolu:
+1. `id` -> O anki UID, GID ve dahil oldugun tum gruplari listeler.
+2. `whoami` -> Sistemi o an hangi isimle kullandigini gosterir.
+
+---
+### Mudur Stratejisi:
+Sirketinde bir stajyer ise basladiginda ona Root sifresini vermezsin. Once `useradd` ile hesabini acar, sonra sadece yetkili oldugu projelerin grubuna (`usermod -aG`) dahil edersin. Boylece stajyer sadece kendi dairesinde calisabilir, tum binayi (sunucuyu) yakamaz.
+
+
+### 17. lsof -u [kullanici] (Dosya Casusu)
+
+Linux'ta "Her sey bir dosyadir". Bu komut, bir kullanicinin sistemde o an actigi tum kapilari (dosya, internet, servis) listeler.
+
+* **Amac:** Kullanicinin neyi kurcaladigini canli olarak gormek.
+* **Kritik Kullanimlar:**
+  * `sudo lsof -u stajyer`: Stajyerin actigi tum dosyalari doker.
+  * `lsof /home/doganay/sirket.txt`: "Bu dosyayi su an kimler okuyor?" sorusunun cevabini verir.
+
+* **Tablo Basliklari:**
+  * **PID:** Islemin kimlik numarasi.
+  * **TYPE:** Dosya tipi (REG: Normal dosya, DIR: Klasor).
+  * **NAME:** Acik olan dosyanin tam yolu.
+
+
+  ### 19. Kullanicilar Arasi Gecis (su Komutu)
+
+Terminalde bir hesaptan digerine atlamak icin kullanilir.
+
+* **su [kullanici]:** Kullanici degistirir ama mevcut dizinde kalir.
+* **su - [kullanici]:** Kullaniciyi tum profil ayarlari ve ana diziniyle beraber yukler. (En sagliklisi budur).
+* **sudo su - [kullanici]:** Sifre sormadan (yetkin varsa) baska kullaniciya gecer.
+* **exit:** Bir onceki kullaniciya geri doner (Oturumu kapatir).
+
+**Mantik:** `su` komutu "Switch User" (Kullanici Degistir) anlamina gelir. Basindaki `sudo` ise bu islemi yetkili yapmani saglar.
