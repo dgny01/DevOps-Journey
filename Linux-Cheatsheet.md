@@ -415,3 +415,33 @@ Terminalde bir hesaptan digerine atlamak icin kullanilir.
 * **exit:** Bir onceki kullaniciya geri doner (Oturumu kapatir).
 
 **Mantik:** `su` komutu "Switch User" (Kullanici Degistir) anlamina gelir. Basindaki `sudo` ise bu islemi yetkili yapmani saglar.
+
+
+# 20. Linux Dosya Izinleri Ozeti
+
+# Linux Dosya Izinleri ve chmod +x
+
+### 1. Kim (Karakterler)
+- **u (User):** Dosya Sahibi (Sen)
+- **g (Group):** Grup Uyeleri
+- **o (Others):** Sistemdeki diger herkes
+
+### 2. Ne (Izin Turleri ve Degerler)
+- **r (Read - 4):** Okuma
+- **w (Write - 2):** Yazma/Degistirme
+- **x (Execute - 1):** Calistirma (Program gibi kosturma)
+
+### 3. chmod +x Nedir?
+- `chmod +x filepath`: Bu komut u, g ve o ayrimi yapmadan HERKESE calistirma yetkisi verir.
+- `chmod u+x filepath`: Sadece dosya sahibine (sana) calistirma yetkisi verir. Daha guvenlidir.
+
+### 4. Neden Gerekli?
+- Linux'ta bir dosyanin uzantisinin .sh veya .py olmasi yetmez. Sistemin o dosyayi calistirabilmesi icin "x" pasaportuna bakmasi gerekir.
+
+### 5. Sik Kullanilanlar
+- **755:** Sahibi her seyi yapar, digerleri sadece okur ve calistirir.
+- **600:** Sadece sahibi okur/yazar (SSH Keyler icin sarttir).
+- **644:** Sahibi okur/yazar, digerleri sadece okur (Config dosyalari).
+
+### 6. Klasor Notu
+- Klasorde **'x'** izni yoksa icine `cd` ile GIREMEZSIN.
