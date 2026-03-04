@@ -445,3 +445,172 @@ Terminalde bir hesaptan digerine atlamak icin kullanilir.
 
 ### 6. Klasor Notu
 - Klasorde **'x'** izni yoksa icine `cd` ile GIREMEZSIN.
+
+
+# 21. ### LINUX / SVSTUDIO SUDO SIFRESINI KALDIRMA (NOPASSWD)
+
+Bu islem, terminalde veya SVStudio icindeki scriptlerde 'sudo' komutu kullanildiginda sistemin sifre sormasini engeller. Otomasyonun kesintisiz calismasi icin kritiktir.
+
+1. TERMINALI AC VE DUZENLEME KOMUTUNU YAZ:
+   sudo visudo
+
+2. DOSYANIN EN ALTINA SU SATIRI EKLE (Kullanici adini kendine gore degistir):
+   doganay ALL=(ALL) NOPASSWD: ALL
+
+3. KAYDET VE CIK:
+   - Ctrl + O (Kaydet)
+   - Enter (Onayla)
+   - Ctrl + X (Cik)
+
+NOT: Bu islemden sonra 'sudo' ile baslayan komutlar artik sifre istemeyecektir. Guvenlik icin sadece kendi kisisel makinenizde veya kontrollu otomasyon ortamlarinda kullanmaniz onerilir.
+
+Neden sadece sudo nano /etc/sudoers yazmiyoruz?
+Aslinda yazabilirsin ama cok tehlikelidir. * nano ile girip yanlisdlikla bir karakteri silersen ve kaydedip cikarsan, sistem bir daha sudo yetkisi vermez. Kendi bilgisayarinda hapis kalirsin.
+
+visudo ile girersen; sen hatali bir sey yazdiginnda, cikarken seni durdurur: "Hocam hata yaptin, bu dosya boyle bozuk kaydedilirse sistem coker, duzelt oyle cik" der.
+
+
+# 22. PACKAGE MANAGEMENT (PAKET YONETIMI)
+
+### 1. APT (Advanced Package Tool)
+- Ubuntu/Debian tabanli sistemlerde yazilim kurma, guncelleme ve silme aracidir.
+
+### 2. Temel Komutlar
+- `sudo apt update`: Paket listelerini gunceller.
+- `sudo apt install [paket]`: Yeni yazilim kurar (Orn: `sudo apt install htop`).
+- `sudo apt remove [paket]`: Yazilimi kaldirir.
+- `sudo apt upgrade`: Kurulu paketleri son surume yukseltir.
+
+# LINUX PAKET VE INDIRME MANTIGI (OZET)
+
+### 1. Neden Wget ve Curl?
+- Sunucu ortamlarinda grafik arayuzu (browser) yoktur.
+- Dosya indirme islemleri terminal uzerinden bu komutlarla yapilir.
+- Otomasyon scriptleri icin hayati onem tasir.
+
+### 2. Apt Update vs Apt Install
+- **Apt Update:** Paketlerin kendisini degil, "Hangi paket hangi surumde?" bilgisini (index) gunceller. Market katalogunu yenilemek gibidir.
+- **Apt Install:** Katalogdaki bilgiye gore paketi internetten indirir ve kurar.
+- **Sira:** Once `update` ile bilgi tazelemek, sonra `install` ile kurulum yapmak sarttir.
+
+### 3. Repo Dosyalari (Depo Adresleri)
+- Sistemlerin paketleri nereden cekecegini bildigi "adres defterleri"dir.
+- **Debian/Ubuntu:** `/etc/apt/sources.list`
+- **RedHat/CentOS:** `/etc/yum.repos.d/`
+- Bir paket bulunamiyorsa veya ozel bir sirket deposu eklenecekse bu dosyalar duzenlenir.
+
+---
+
+# 23. SERVICES & SYSTEMD (SERVIS YONETIMI)
+
+### 1. Systemctl Nedir?
+- Uygulamalarin arka planda "servis" (daemon) olarak calismasini yoneten ana komuttur.
+
+### 2. Kritik Komutlar
+- `sudo systemctl start [servis]`: Servisi baslatir.
+- `sudo systemctl stop [servis]`: Servisi durdurur.
+- `sudo systemctl status [servis]`: Uygulama calisiyor mu, hata var mi gosterir.
+- `sudo systemctl enable [servis]`: Bilgisayar acildiginda servisin otomatik baslamasini saglar.
+
+# SYSTEMD SERVIS KONTROLLERI
+
+### 1. Servis Durumu Kontrolu (Running?)
+- **Komut:** `systemctl status [servis_adi]`
+- **Amac:** Uygulamanin o an calisip calismadigini ve son hata loglarini gormek.
+
+### 2. Otomatik Baslatma Kontrolu (Is-Enabled?)
+- **Komut:** `systemctl is-enabled [servis_adi]`
+- **Amac:** Sunucu yeniden basladiginda (reboot) servisin otomatik acilip acilmayacagini teyit etmek.
+
+### 3. Reboot Sonrasi Otomatik Acilmasini Saglamak
+- **Komut:** `sudo systemctl enable [servis_adi]`
+- **Zit Komut:** `sudo systemctl disable [servis_adi]` (Otomatik baslatmayi kapatir).
+
+### 4. Hizli Baslatma ve Durdurma
+- `sudo systemctl start [servis]`: Servisi o an calistirir.
+- `sudo systemctl stop [servis]`: Servisi durdurur.
+- `sudo systemctl restart [servis]`: Servisi kapatip tekrar acar (Guncelleme sonrasi).
+
+
+# SERVIS (SERVICE) MANTIGI NEDIR?
+
+### 1. Servis Tanimi
+- Arka planda (background) kullaniciya bir arayuz gostermeden calisan programlardir.
+- Sistem acildigi andan itibaren gorev yapmaya baslarlar.
+
+### 2. Canli Servis Kontrolu (Linux)
+- `systemctl list-units --type=service`: Sistemdeki tum servisleri listeler.
+- `systemctl list-units --type=service --state=running`: Sadece calisanlari gosterir.
+
+### 3. Neden Kullanilir?
+- **Continuity (Sureklilik):** Uygulamanin her zaman ayakta kalmasini saglar.
+- **Auto-Restart:** Uygulama cokerse, servis mekanizmasi onu otomatik olarak tekrar baslatabilir.
+- **Boot Management:** Sunucu baslatildiginda (reboot) el ile mudahale etmeden uygulamanin acilmasini saglar.
+
+---
+
+# 24. PROCESSES (SUREC VE ISLEM YONETIMI)
+
+### 1. PID ve Izleme
+- Her islemin benzersiz bir kimlik numarasi (PID) vardir.
+- `top` / `htop`: CPU ve RAM tuketimini canli gosteren paneldir.
+- `ps aux`: Calisan tum islemlerin anlik detayli listesini verir.
+
+### 2. Islem Sonlandirma (Kill)
+- `kill -9 [PID]`: Yanit vermeyen veya sistemi kilitleyen islemi zorla durdurur.
+
+---
+
+# 25. ARCHIVING & COMPRESSION (ARSIVLEME)
+
+### 1. Dosya Paketleme (TAR)
+- `tar -cvf paket.tar [dosya_yolu]`: Dosyalari birlestirip arsiv olusturur.
+- `tar -xvf paket.tar`: Arsivi disari cikarir.
+
+### 2. Sikistirma (GZIP)
+- `gzip [dosya]`: Dosyayi sikistirir (Boyut kucultur).
+- `gunzip [dosya.gz]`: Sikistirilmis dosyayi acar.
+
+---
+
+# 26. TROUBLESHOOTING & LOGS (SORUN GIDERME)
+
+### 1. Log Izleme
+- `tail -f /var/log/syslog`: Sistem loglarini canli (akan bir sekilde) izler.
+- `journalctl -u [servis_adi] -f`: Belirli bir servisin hatalarini takip eder.
+
+### 2. Arama ve Analiz
+- `grep -i "error" [dosya]`: Metin icinde hata satirlarini bulur.
+- `df -h`: Disk doluluk oranlarini kontrol eder.
+- `free -m`: Bos RAM miktarini gosterir.
+
+
+# 27. PROCESS MANAGEMENT (ISLEM VE SUREC YONETIMI)
+
+### 1. How to check all processes with their Parent PID?
+Sistemdeki islemleri ve onlari kimin baslattigini (Ebeveyn/Parent) gormek icin kullanilir.
+- **Komut:** `ps -ef` veya `ps -efj`
+- **Kolonlar:**
+    - **PID:** Islem numarasi.
+    - **PPID (Parent Process ID):** Bu islemi doguran/baslatan ana islemin numarasi.
+- **Mantik:** Eger bir uygulama (child) sorun cikariyorsa, onu baslatan ana uygulamayi (parent) bulup mudahale etmek gerekebilir.
+
+### 2. Kill vs Kill -9 (Graceful vs Forceful)
+Bir sureci sonlandirmanin iki yolu vardir:
+- **`kill [PID]` (Graceful):** Uygulamaya "Lutfen isini bitir, kaydet ve kapan" der. Nazik bir kapnistir. Bu yontemle ana islem (parent) kapanirsa, alt islemler (children) de duzgunce kapanir.
+- **`kill -9 [PID]` (Forceful):** Uygulamaya hic sormadan, fisini cekmek gibidir. Veri kaybi riski vardir. Eger nazikce kapanmiyorsa (donmussa) bu komut kullanilir.
+
+### 3. Orphan Process vs Zombie Process (Mikat Sorusu!)
+
+- **Orphan (Yetim) Process:**
+    - **Durum:** Parent (Ebeveyn) islem, child (cocuk) islem hala calisirken bir sekilde olurse veya kapanirsa olusur.
+    - **Ne Olur?:** Bu islemler sahipsiz kalmaz. Linux'taki 1 numarali islem olan **`init`** (veya modern sistemlerde `systemd`) bu islemi sahiplenir. Zararsizdir, calismaya devam eder.
+
+- **Zombie (Zombi) Process:**
+    - **Durum:** Child islem isini bitirip olmustur, ama Parent islem hala onun bittigini sisteme bildirmemistir (exit status'u okumamistir).
+    - **Ne Olur?:** Islem calismaz, CPU harcamaz ama sistemin "Islem Tablosu"nda (Process Table) yer kaplar.
+    - **Tehlike:** Cok fazla zombi olursa yeni islem acilamaz hale gelir. Zombiyi oldurmek icin `kill` ise yaramaz (cunku zaten oludur), onu yaratan Parent'i `restart` etmek veya oldurmek gerekir.
+
+
+
+  
