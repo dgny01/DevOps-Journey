@@ -613,4 +613,240 @@ Bir sureci sonlandirmanin iki yolu vardir:
 
 
 
-  
+## Devami AWS Altyapi ve Guvenlik
+
+*   **Public Subnet:** ALB (Load Balancer) buradadir. Internetle konusur.
+*   **Private Subnet:** EC2 ve RDS buradadir. Guvenli bolge.
+*   **Stateless:** Uygulama veri saklamaz (RDS kullanir). Pod cokerse veri kaybi olmaz.
+*   **High Availability:** Sistemi 2 farkli **Availability Zone (AZ)** uzerine yayarak yedeklilik sagladim.
+
+---
+
+## Linux Terminal Komutlari (Problem Cozme)
+
+### Surec ve Kaynak Analizi
+| Komut | Aciklama |
+| :--- | :--- |
+| `ps aux --sort=-%cpu | head -n 5` | En cok CPU yiyen ilk 5 sureci gosterir. |
+| `du -sh *` | Klasorlerin boyutunu (GB/MB) listeler. |
+| `df -h` | Diskin genel doluluk oranini gosterir. |
+| `uptime` | Sistem ne kadardir acik/ayakta? |
+
+### Network ve Port Kontrolu
+| Komut | Aciklama |
+| :--- | :--- |
+| `lsof -i :[PORT]` | Belirli bir portu hangi servis tutuyor? |
+| `lsof -i -P -n | grep LISTEN` | Dinlemede olan tum kapilari gosterir. |
+| `ping -c 4 [IP/URL]` | Baglanti var mi, gecikme (ms) ne kadar? |
+
+> ** Ipucu:** `lsof` ciktisinda **LISTEN** kapinin acik oldugunu, **ESTABLISHED** ise birinin iceride bagli oldugunu gosterir.
+
+---
+
+## Kubernetes Operasyon
+*   **Hata Takibi:** `kubectl get events` (Son dakikalarda ne patlamis?)
+*   **Pod Kontrolu:** `kubectl get pods` (Podlar yasiyor mu?)
+*   **Log Inceleme:** `kubectl logs [pod_name]` (Uygulama neden hata vermis?)
+
+
+Kategori,Komut,Muhendislik Amaci (Ne Ise Yarar?)
+K8s (Durum),kubectl get pods,"Pod'lar hayatta mi? (Running, Error, Pending kontrolu)"
+K8s (Hata),kubectl logs [pod_adi],Uygulamanin icindeki hatayi oku (Java/Python logu).
+K8s (Derin Bakis),kubectl describe pod [pod_adi],"Pod neden kalkmiyor? (Yer mi yok, Image mi hatali?)"
+K8s (Olaylar),kubectl get events --sort-by=.metadata.creationTimestamp,Cluster genelinde son dakikada ne patladi?
+K8s (Icine Gir),kubectl exec -it [pod_adi] -- sh,"Pod'un icine terminalle siz, dosyalara/config'lere bak."
+---,---,---
+Linux (Performans),top veya htop,Islemciyi (CPU) ve RAM'i en cok kim somuruyor?
+Linux (Disk),df -h,Disk doldu mu? (GB cinsinden insan okuyabilecegi format).
+Linux (RAM),free -m,Makinede (EC2) bosta ne kadar RAM kaldi?
+Linux (Surec),ps aux,Arka planda calisan tum surecleri ve sahiplerini listele.
+Linux (Port),lsof -i :[port],"""Port already in use"" hatasinda portu isgal eden servisi bulur."
+---,---,---
+Network (Erisim),curl -I [url],"Siteye gitmeden sadece ""200 OK"" mi ""500 Error"" mi bak."
+Network (DNS),nslookup [domain],Bu domain (adres) hangi IP'ye gidiyor?
+Network (Rota),mtr [hedef_ip],Paket yolda nerede (hangi ziplamada/hop) kayboluyor?
+
+
+  # 28. NETWORKING MANTIGI (AG TEMELLERI)
+
+### 1. Bilgisayarlarin Veri Paylasmasi Ne Demek?
+- **Olay:** Senin bilgisayarindan cikan bir verinin (mesaj, dosya), kablolar veya kablosuz sinyallerle baska bir bilgisayara ulasmasidir.
+- **Ornek:** WhatsApp sunucusu (bir bilgisayar), senin telefonuna (baska bir bilgisayar) bildirim paketini gonderir.
+- **Internet Nedir?:** Dunyadaki milyarlarca bilgisayarin birbirine kablolarla baglandigi devasa bir "bilgi yolu" agidir.
+
+### 2. Ic Ag (LAN) ve Private IP Nedir?
+- **Ic Ag (LAN):** Senin yurdundaki modem ve ona bagli tum cihazlarin (telefon, laptop) kendi aralarinda kurdugu kucuk agdir.
+- **Private IP:** Bu kucuk agin icindeki "oda numaran"dir. Sadece o modeme bagli olanlar birbirini bu numarayla gorur (Orn: 192.168.1.15).
+- **Public IP:** Modemin internete cikarken kullandigi "dis dunya" adresidir. Google seni bu adresle tanir.
+
+### 3. IPv4 Nedir?
+- Bilgisayarlarin internetteki adres formatidir. 4 tane sayidan olusur (Orn: 172.217.17.142).
+- Sayilar 0-255 arasindadir. Bu adresler tukendigi icin artik IPv6'ya gecilmektedir.
+
+---
+
+# 29. PROTOKOLLER VE TCP (TRAFIK KURALLARI)
+
+### 1. Protokol Nedir?
+- Bilgisayarlarin birbiriyle anlasmak icin kullandigi "ortak dildir". Iki bilgisayar baglansa bile ayni protokolu konusmazlarsa veri cop olur.
+
+### 2. TCP (Transmission Control Protocol) Detayli Anlatim
+- **TCP (Garanti):** Verinin hatasiz gitmesini saglayan protokoldur.
+- **3-Way Handshake (3'lu El Sikisma):**
+    1. Senin PC: "Baglanabilir miyim?" (SYN)
+    2. Sunucu: "Evet, baglanabilirsin." (SYN-ACK)
+    3. Senin PC: "Tamam, veriyi gonderiyorum." (ACK)
+- **Ozellik:** Eger bir paket yolda kaybolursa, TCP bunu fark eder ve tekrar gonderilmesini saglar. Web siteleri ve mesajlasmalar TCP kullanir.
+
+---
+
+# 30. PORTS (SUNUCU KAPILARI)
+
+### 1. Port Nedir?
+- Sunucu (Server) kocaman bir apartman dairesi ise, portlar bu dairenin kapilaridir.
+- Bir sunucuda ayni anda web sitesi, veritabani ve mail calisabilir. Hangi paketin hangi programa gidecegi port numarasiyla belli olur.
+
+### 2. Kritik Portlar
+- **Port 80 (HTTP):** Standart web trafigi kapisidir.
+- **Port 443 (HTTPS):** Guvenli (Sifreli) web trafigi kapisidir.
+- **Port 22 (SSH):** Bizim terminal ile sunucuya baglandigimiz "tamirci" kapisidir.
+- **Port 5432 (PostgreSQL):** Veritabani baglanti kapisidir.
+
+---
+
+# 31. AG SORUN GIDERME OZETI
+
+| Sorun | Bakilacak Yer | Komut |
+| :--- | :--- | :--- |
+| **Karsi taraf ayakta mi?** | Baglanti Durumu | `ping [IP]` |
+| **Kapi (Port) acik mi?** | Port Durumu | `nc -zv [IP] [Port]` |
+| **Isimden bulamiyorum?** | DNS Sorgusu | `nslookup [site.com]` |
+| **Portu kim kullaniyor?** | Uygulama Tespiti | `lsof -i :[Port]` |
+
+
+# 32. NETWORKING VE OSI KATMANLARI (TAM OZET)
+
+### 1. Networking Nedir?
+- Bilgisayarlarin veri paylasmak icin birbirine baglanmasidir.
+- **LAN (Ic Ag):** Ev/Ofis icindeki kucuk ag.
+- **WAN (Dis Ag):** Internet gibi devasa aglarin birlesimi.
+
+### 2. IP Adresi (Adresleme)
+- **IPv4:** 4 sayidan olusan standart adres (192.168.1.1).
+- **IPv6:** Yeni nesil, cok uzun adres formati.
+- **Public IP:** Dunyaya acilan adresin.
+- **Private IP:** Ag icindeki (modem alti) adresin.
+- **Localhost (127.0.0.1):** Bilgisayarin kendi kendine ulasmasi (Loopback).
+
+### 3. OSI KATMANLARI (7 LAYER MODEL)
+Verinin yolculugunu anlatan standart modeldir:
+
+- **L7 - Application (Uygulama):** Kullanicinin gordugu (HTTP, FTP, DNS).
+- **L6 - Presentation (Sunum):** Verinin formati ve sifrelenmesi (SSL/TLS).
+- **L5 - Session (Oturum):** Baglantinin acilip kapanmasi.
+- **L4 - Transport (Tasima):** Verinin "nasil" gidecegi (**TCP** veya **UDP**). Portlar burada calisir.
+- **L3 - Network (Ag):** Yonlendirme ve IP adresleri. Cihaz: **Router**.
+- **L2 - Data Link (Veri Bagi):** Fiziksel adresleme (MAC). Cihaz: **Switch**.
+- **L1 - Physical (Fiziksel):** Kablo, elektrik sinyalleri (0 ve 1'lerin voltaj hali).
+
+### 4. Kritik Kavramlar
+- **Protokol:** Bilgisayarlarin anlasma dili ve kurallar setidir (Orn: TCP).
+- **TCP (3-Way Handshake):** Veri gitmeden once SYN -> SYN-ACK -> ACK adimlariyla el sikisilir (Garanti iletisim).
+- **Port:** Sunucu uzerindeki kapilardir (22: SSH, 80: HTTP, 443: HTTPS).
+- **DNS:** Site ismini (google.com) IP adresine ceviren "Telefon Rehberi"dir.
+
+### 5. Ag Cihazlari
+- **Switch:** Sadece kendi agindaki (LAN) cihazlari birbirine baglar.
+- **Router:** Farkli aglari (LAN ve WAN) birbirine baglayip yolu tarif eder.
+
+
+# 32. PUBLIC VS PRIVATE IP (AYIRMA YONTEMI)
+
+### 1. Private IP (Ic Ag)
+- Sadece yerel agda (LAN) gecerlidir.
+- Internetten bu IP'lere direkt ulasilamaz.
+- Araliklar: 10.x, 192.168.x, 172.16-31.x.
+
+### 2. Public IP (Dis Dunya)
+- Dunya uzerinde benzersizdir.
+- Internet uzerinden herkes bu IP'ye paket gonderebilir.
+- Ornek: 54.23.45.76 bir Public IP'dir (Amazon AWS IP'lerine benzer).
+
+### 3. IP Sorgulama
+- Kendi Public IP'ni ogrenmek icin: `curl ifconfig.me`
+- Kendi Private IP'ni ogrenmek icin: `ip addr` (veya `ifconfig`)
+
+
+# 33. IP VE PORT OZET TABLOSU
+
+### 1. Adresleme Mantigi
+- **IP (Adres):** Binanin yeri. (Public = Dis dunya, Private = Ag ici).
+- **Port (Kapi):** Binanin icindeki servislerin numarasi.
+
+### 2. Kritik Portlar (Mulakat Sorusu)
+- 22: SSH (Uzaktan Yonetim)
+- 80/443: Web Trafigi (HTTP/HTTPS)
+- 3306: MySQL (Veritabani)
+- 5432: PostgreSQL (Veritabani)
+- 2049: NFS (Dosya Paylasimi)
+- 25: SMTP (E-posta)
+
+### 3. Protokollerin Gorevi
+- **SSH:** Sunucuyu terminalden yonetmek.
+- **NFS:** Ag uzerinden ortak klasor kullanmak.
+- **DNS:** Isimleri (google.com) sayilara (IP) cevirmek.
+
+
+# 34. GIT VERSION CONTROL: PROFESYONEL KOMUTLAR VE SENARYOLAR
+
+---
+
+### 1. SSH BAGLANTISI (SIFRESIZ VE GUVENLI ERISIM)
+GitHub/GitLab'a her seferinde sifre girmemek icin "Guvenli El Sikisma" (SSH) yapilir.
+* **`ssh-keygen -t rsa -b 4096`**: Bilgisayarin icin "Ozel" (id_rsa) ve "Genel" (id_rsa.pub) anahtar uretir.
+* **`cat ~/.ssh/id_rsa.pub`**: Bu genel anahtari kopyalayip GitHub -> Settings -> SSH Keys kismina eklersin.
+* **`git clone git@github.com:user/repo.git`**: Artik Port 22 uzerinden sifresiz baglanirsin.
+
+---
+
+### 2. TEMEL CALISMA AKISI (THE GOLDEN LOOP)
+Kod degistiginde izlenecek standart yol:
+1. **`git status`**: "Neredeyim, hangi dosyalar degisti?" (Pusula komutudur).
+2. **`git diff`**: Henuz kaydetmedigin satir bazli degisiklikleri gosterir.
+3. **`git add .`**: Tum degisiklikleri "bekleme odasina" (Staging Area) alir.
+4. **`git commit -m "mesaj"`**: Degisiklikleri bir versiyon olarak kalici kaydeder.
+5. **`git push origin main`**: Yerel kayitlari buluta (GitHub) gonderir.
+
+
+
+---
+
+### 3. DALLANMA VE BIRLESTIRME (BRANCH & MERGE)
+Proje ana hattini (main) bozmadan yeni ozellikler eklemek icindir.
+* **`git branch`**: Mevcut dallari listeler.
+* **`git switch -c [yeni-dal]`**: Yeni bir dal olusturur ve oraya gecer.
+* **`git switch [mevcut-dal]`**: Dallar arasinda gecis yapar (Eski adi `checkout`).
+* **`git merge [ozellik-dali]`**: Baska bir daldaki kodlari bulundugun dala katar.
+* **`git pull`**: Uzak sunucudaki (GitHub) son degisiklikleri indirip birlestirir.
+
+
+
+---
+
+### 4. GERI SARMA VE KURTARMA (ROLLBACK)
+Hata yapildiginda hayati kurtaran "Zaman Makinesi" komutlari:
+* **`git log --oneline`**: Gecmisteki tum kayitlari (Commit'leri) ID'leriyle listeler.
+* **`git checkout -- [dosya]`**: Henuz kaydetmedigin hatali degisiklikleri siler, dosyayi sifirlar.
+* **`git restore --staged [dosya]`**: Yanlislikla `add` yaptigin dosyayi bekleme odasindan cikarir.
+* **`git revert [Commit-ID]`**: Belirli bir kaydi geri alan "yeni" bir kayit acar (En guvenli geri donus).
+* **`git reset --hard [Commit-ID]`**: **KRITIK!** Projeyi komple o ID'deki haline geri dondurur, sonrasini tamamen siler.
+
+---
+
+### 5. DOSYA VE TEMIZLIK ISLEMLERI
+* **`git rm [dosya]`**: Dosyayi hem diskten hem Git takibinden siler.
+* **`git clean -fd`**: Git takibinde olmayan (untracked) cop dosyalarin tamamini temizler.
+* **`git remote -v`**: Yerel deponun hangi uzak sunucuya (origin) bagli oldugunu gosterir.
+
+---
+
